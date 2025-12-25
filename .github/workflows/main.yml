@@ -22,6 +22,7 @@ jobs:
           script: |
             set -e
             cd /home/ubuntu/digitalmoneydeploy
+            git clean -fb
             git pull origin main
             npm install
             pm2 restart all
