@@ -21,7 +21,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-            cd /home/ec2-user/project/digitalmoneydeploy
+            cd /home/ubuntu/digitalmoneydeploy
             git pull origin main
             npm install
             pm2 restart all
