@@ -22,7 +22,16 @@ jobs:
           script: |
             set -e
             cd /home/ubuntu/digitalmoneydeploy
-          
-            git pull origin main
+            
+            # Configure git to handle divergent branches
+            git config pull.rebase false
+            
+            # Pull latest changes (will merge if branches diverged)
+            git pull origin main || {
+              # If pull fails, reset to remote branch (more aggressive approach)
+              echo "Git pull failed, resetting to match remote..."
+              git fetch origin
+              git reset --hard origin/main
+            }
+            
             npm install
-            pm2 restart all
