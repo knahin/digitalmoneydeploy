@@ -22,40 +22,51 @@ jobs:
           script: |
             set -e
             cd /home/ubuntu/digitalmoneydeploy
-  
-            # Fix ownership if needed
-            sudo chown -R ubuntu:ubuntu /home/ubuntu/digitalmoneydeploy || true
-  
+            
             # Clean up node_modules to avoid conflicts
             echo "Cleaning up node_modules..."
             rm -rf backend/node_modules || true
             rm -rf frontend/node_modules || true
-  
+            
             # Clean untracked files that might conflict
             echo "Cleaning untracked files..."
             git clean -fd || true
-  
+            
             # Configure git to handle divergent branches
             git config pull.rebase false
-  
+            
             # Fetch latest changes
             echo "Fetching latest changes..."
             git fetch origin
-  
+            
             # Reset to match remote exactly (discards local changes)
             echo "Resetting to match remote branch..."
             git reset --hard origin/main
-  
+            
             # Clean any remaining untracked files after reset
             git clean -fd || true
-  
-            # Fix ownership again after git operations
-            sudo chown -R ubuntu:ubuntu /home/ubuntu/digitalmoneydeploy || true
-  
+            
             # Install dependencies
             echo "Installing dependencies..."
             cd backend && npm install && cd ..
-  
-            # Restart PM2
-            echo "Restarting PM2..."
-            pm2 restart all
+            
+            # Restart or start PM2 processes
+            echo "Restarting/Starting PM2..."
+            cd backend
+            
+            # Check if PM2 has any processes
+            if pm2 list | grep -q "online\|stopped"; then
+              echo "PM2 processes found, restarting..."
+              pm2 restart all
+            else
+              echo "No PM2 processes found, starting application..."
+              # Start your application - adjust the command based on your setup
+              # Common examples:
+              # pm2 start npm --name "backend" -- start
+              # pm2 start server.js --name "backend"
+              # pm2 start ecosystem.config.js
+              pm2 start npm --name "backend" -- start || pm2 start server.js --name "backend" || echo "Please configure PM2 start command"
+            fi
+            
+            # Save PM2 process list
+            pm2 save || true
