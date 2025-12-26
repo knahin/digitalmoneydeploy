@@ -22,34 +22,40 @@ jobs:
           script: |
             set -e
             cd /home/ubuntu/digitalmoneydeploy
-            
+  
+            # Fix ownership if needed
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/digitalmoneydeploy || true
+  
             # Clean up node_modules to avoid conflicts
             echo "Cleaning up node_modules..."
             rm -rf backend/node_modules || true
             rm -rf frontend/node_modules || true
-            
+  
             # Clean untracked files that might conflict
             echo "Cleaning untracked files..."
             git clean -fd || true
-            
+  
             # Configure git to handle divergent branches
             git config pull.rebase false
-            
+  
             # Fetch latest changes
             echo "Fetching latest changes..."
             git fetch origin
-            
+  
             # Reset to match remote exactly (discards local changes)
             echo "Resetting to match remote branch..."
             git reset --hard origin/main
-            
+  
             # Clean any remaining untracked files after reset
             git clean -fd || true
-            
+  
+            # Fix ownership again after git operations
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/digitalmoneydeploy || true
+  
             # Install dependencies
             echo "Installing dependencies..."
             cd backend && npm install && cd ..
-            
+  
             # Restart PM2
             echo "Restarting PM2..."
             pm2 restart all
