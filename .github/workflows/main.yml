@@ -23,15 +23,33 @@ jobs:
             set -e
             cd /home/ubuntu/digitalmoneydeploy
             
+            # Clean up node_modules to avoid conflicts
+            echo "Cleaning up node_modules..."
+            rm -rf backend/node_modules || true
+            rm -rf frontend/node_modules || true
+            
+            # Clean untracked files that might conflict
+            echo "Cleaning untracked files..."
+            git clean -fd || true
+            
             # Configure git to handle divergent branches
             git config pull.rebase false
             
-            # Pull latest changes (will merge if branches diverged)
-            git pull origin main || {
-              # If pull fails, reset to remote branch (more aggressive approach)
-              echo "Git pull failed, resetting to match remote..."
-              git fetch origin
-              git reset --hard origin/main
-            }
+            # Fetch latest changes
+            echo "Fetching latest changes..."
+            git fetch origin
             
-            npm install
+            # Reset to match remote exactly (discards local changes)
+            echo "Resetting to match remote branch..."
+            git reset --hard origin/main
+            
+            # Clean any remaining untracked files after reset
+            git clean -fd || true
+            
+            # Install dependencies
+            echo "Installing dependencies..."
+            cd backend && npm install && cd ..
+            
+            # Restart PM2
+            echo "Restarting PM2..."
+            pm2 restart all
